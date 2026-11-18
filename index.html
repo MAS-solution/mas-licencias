@@ -87,7 +87,15 @@ let L=[],E=[],filtro='';
 function pantallaLogin(msg){$('bSalir').hidden=true;
   $('app').innerHTML=`<div class="login"><h2>Entrar</h2><p>${msg||'Te mandamos un link a tu mail para entrar. Sin contraseña.'}</p>
   <div class="f"><input id="lmail" type="email" placeholder="tu mail" autocomplete="email"></div>
-  <button class="btn" style="width:100%" onclick="mandarLink()">Mandarme el link</button></div>`}
+  <button class="btn" style="width:100%" onclick="mandarLink()">Mandarme el link</button>
+  <p style="margin-top:22px">¿Tenés un código de 6 números?</p>
+  <div class="f"><input id="lcod" inputmode="numeric" maxlength="6" placeholder="Código" autocomplete="one-time-code" style="text-align:center;letter-spacing:4px;font-size:20px"></div>
+  <button class="btn sec" style="width:100%" onclick="entrarCodigo()">Entrar con código</button></div>`}
+async function entrarCodigo(){const m=$('lmail').value.trim().toLowerCase(),c=$('lcod').value.replace(/\D/g,'');
+  if(!m){toast('Escribí tu mail arriba.');return}if(c.length!==6){toast('El código tiene 6 números.');return}
+  const{error}=await sb.auth.verifyOtp({email:m,token:c,type:'email'});
+  if(error){toast(/expired|invalid/i.test(error.message)?'Código vencido o incorrecto. Pedí uno nuevo.':error.message);return}
+  iniciar()}
 async function mandarLink(){const m=$('lmail').value.trim().toLowerCase();if(!m){toast('Escribí tu mail.');return}
   const{error}=await sb.auth.signInWithOtp({email:m,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
   if(error){toast(/signups not allowed|not found|Signups/i.test(error.message)?'Ese mail no tiene acceso.':error.message);return}
