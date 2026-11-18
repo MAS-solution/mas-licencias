@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MAS Licencias</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#2E5F63">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono-192.png">
+<link rel="apple-touch-icon" href="icono-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--pe:#2E5F63;--pe2:#244c4f;--bg:#f3f5f4;--card:#fff;--ink:#1d2b2c;--mut:#667775;--line:#e1e7e5;--ok:#2f8a5b;--okb:#e5f4ec;--am:#a8670b;--amb:#fdf1dc;--rd:#b23a3a;--rdb:#fbe6e6;--gr:#5e6b6a;--grb:#eceff0}
+@media (prefers-color-scheme:dark){:root{--bg:#121817;--card:#1b2423;--ink:#e6eeec;--mut:#94a5a2;--line:#2a3735;--okb:#1d3a2b;--amb:#3d2e13;--rdb:#402020;--grb:#26302f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 Outfit,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+header{background:var(--pe);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px}
+header h1{font-size:19px;margin:0;font-weight:600;flex:1}
+header button{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:13px}
+main{max-width:640px;margin:0 auto;padding:14px 16px 100px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}
+.kpi b{display:block;font-size:22px;font-weight:600}.kpi small{color:var(--mut);font-size:11px}
+.kpi.warn b{color:var(--am)}.kpi.bad b{color:var(--rd)}
+input,select{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+.search{margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.top{display:flex;gap:8px;align-items:flex-start}.top .n{flex:1;min-width:0}
+.n b{font-size:16px;font-weight:600;display:block}.n small{color:var(--mut)}
+.chip{font-size:12px;padding:3px 9px;border-radius:99px;white-space:nowrap;font-weight:500}
+.c-ok{background:var(--okb);color:var(--ok)}.c-am{background:var(--amb);color:var(--am)}.c-rd{background:var(--rdb);color:var(--rd)}.c-gr{background:var(--grb);color:var(--gr)}
+.cod{margin:10px 0 4px;font-size:17px;letter-spacing:1.5px;font-weight:600;color:var(--pe);background:none;border:1px dashed var(--line);border-radius:10px;padding:8px 10px;width:100%;text-align:left;font-family:inherit}
+@media (prefers-color-scheme:dark){.cod{color:#8fc7c5}}
+.eq{border-top:1px solid var(--line);margin-top:10px;padding-top:8px}
+.eqr{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px}.eqr .t{flex:1;min-width:0}.eqr .t small{color:var(--mut);display:block}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.btn{border:0;border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;font-weight:500;background:var(--pe);color:#fff;cursor:pointer}
+.btn.sec{background:var(--grb);color:var(--ink)}.btn.sm{padding:6px 10px;font-size:13px}.btn.rd{background:var(--rdb);color:var(--rd)}.btn.ok{background:var(--okb);color:var(--ok)}
+.btn:disabled{opacity:.5}
+.fab{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom));border-radius:99px;padding:14px 20px;font-size:15px;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+.empty{text-align:center;color:var(--mut);padding:40px 10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.modal[hidden]{display:none}
+.mbox{background:var(--card);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}
+@media (min-width:600px){.modal{align-items:center}.mbox{border-radius:18px}}
+.mbox h2{margin:0 0 12px;font-size:18px;font-weight:600}
+.f{margin-bottom:10px}.f label{display:block;font-size:13px;color:var(--mut);margin-bottom:4px}
+.row2{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.login{max-width:380px;margin:60px auto;padding:0 16px;text-align:center}
+.login h2{font-weight:600}.login p{color:var(--mut)}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1d2b2c;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:30;max-width:90vw}
+#toast.on{opacity:1}
+.grande{font-size:26px;letter-spacing:2px;font-weight:700;color:var(--pe);text-align:center;margin:10px 0 16px}
+</style>
+</head>
+<body>
+<header><h1>MAS Licencias</h1><button id="bSalir" hidden onclick="salir()">Salir</button></header>
+<div id="app"></div>
+<div class="modal" id="modal" hidden onclick="if(event.target===this)cerrar()"><div class="mbox" id="mbox"></div></div>
+<div id="toast"></div>
+<script>
+const SB_URL='https://mpfrcnrdlyjmrlxpttrb.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wZnJjbnJkbHlqbXJseHB0dHJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5NjIxNzUsImV4cCI6MjExMDUzODE3NX0.SNBQTpLdnd_M5NxgrNO1xnwiaVbesR05tMqdLTvGX4Q';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const hoyAr=()=>{const d=new Date(Date.now()-3*3600e3);return d.toISOString().slice(0,10)};
+const fC=s=>s?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4):'—';
+const dias=s=>Math.round((Date.parse(s)-Date.parse(hoyAr()))/864e5);
+function sumarMeses(iso,m){const[y,mo,d]=iso.split('-').map(Number);const t=new Date(Date.UTC(y,mo-1+m,1));const ult=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+1,0)).getUTCDate();t.setUTCDate(Math.min(d,ult));return t.toISOString().slice(0,10)}
+function hace(ts){if(!ts)return 'nunca';const m=Math.round((Date.now()-Date.parse(ts))/60000);if(m<2)return 'recién';if(m<60)return 'hace '+m+' min';const h=Math.round(m/60);if(h<24)return 'hace '+h+' h';const d=Math.round(h/24);return 'hace '+d+' día'+(d>1?'s':'')}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2600)}
+function abrir(h){$('mbox').innerHTML=h;$('modal').hidden=false}
+function cerrar(){$('modal').hidden=true}
+const LETRAS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function nuevoCodigo(){const r=crypto.getRandomValues(new Uint32Array(12));return [0,1,2].map(g=>[0,1,2,3].map(i=>LETRAS[r[g*4+i]%LETRAS.length]).join('')).join('-')}
+function waNum(t){let d=String(t||'').replace(/\D/g,'');if(d.startsWith('54'))d=d.slice(2);if(d.startsWith('9')&&d.length===11)d=d.slice(1);if(d.startsWith('0'))d=d.slice(1);
+  if(d.length===12){for(const k of [2,3,4]){if(d.substr(k,2)==='15'){d=d.slice(0,k)+d.slice(k+2);break}}}return d.length===10?'549'+d:''}
+
+let L=[],E=[],filtro='';
+
+/* ---------- acceso ---------- */
+function pantallaLogin(msg){$('bSalir').hidden=true;
+  $('app').innerHTML=`<div class="login"><h2>Entrar</h2><p>${msg||'Te mandamos un link a tu mail para entrar. Sin contraseña.'}</p>
+  <div class="f"><input id="lmail" type="email" placeholder="tu mail" autocomplete="email"></div>
+  <button class="btn" style="width:100%" onclick="mandarLink()">Mandarme el link</button></div>`}
+async function mandarLink(){const m=$('lmail').value.trim().toLowerCase();if(!m){toast('Escribí tu mail.');return}
+  const{error}=await sb.auth.signInWithOtp({email:m,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
+  if(error){toast(/signups not allowed|not found|Signups/i.test(error.message)?'Ese mail no tiene acceso.':error.message);return}
+  $('app').innerHTML=`<div class="login"><h2>Revisá tu mail</h2><p>Te mandamos un link a <b>${esc(m)}</b>. Abrilo desde este mismo celular o compu.</p></div>`}
+async function salir(){await sb.auth.signOut();pantallaLogin()}
+
+/* ---------- datos ---------- */
+async function cargar(){
+  const[a,b]=await Promise.all([sb.from('lic_licencias').select('*').order('nombre'),sb.from('lic_equipos').select('*')]);
+  if(a.error||b.error){toast((a.error||b.error).message);return}
+  L=a.data;E=b.data;pintar()}
+function estado(l){if(!l.activo)return['Suspendida','c-gr',3];const d=dias(l.vence);
+  if(d<0)return['Vencida','c-rd',0];if(d<=7)return['Vence en '+d+' d','c-am',1];return['Al día · '+d+' d','c-ok',2]}
+function pintar(){
+  const pend=E.filter(e=>!e.aprobado).length,act=L.filter(l=>l.activo&&dias(l.vence)>=0).length,
+    porV=L.filter(l=>l.activo&&dias(l.vence)>=0&&dias(l.vence)<=7).length,venc=L.filter(l=>l.activo&&dias(l.vence)<0).length;
+  const q=filtro.toLowerCase();
+  const lista=L.filter(l=>(l.nombre+' '+(l.contacto||'')+' '+l.codigo).toLowerCase().includes(q))
+    .sort((x,y)=>{const px=E.some(e=>e.licencia_id===x.id&&!e.aprobado)?-1:0,py=E.some(e=>e.licencia_id===y.id&&!e.aprobado)?-1:0;
+      return px-py||estado(x)[2]-estado(y)[2]||x.vence.localeCompare(y.vence)});
+  $('app').innerHTML=`<main>
+    <div class="kpis"><div class="kpi"><b>${act}</b><small>Activas</small></div><div class="kpi ${porV?'warn':''}"><b>${porV}</b><small>Por vencer</small></div>
+      <div class="kpi ${venc?'bad':''}"><b>${venc}</b><small>Vencidas</small></div><div class="kpi ${pend?'warn':''}"><b>${pend}</b><small>Compus esperando</small></div></div>
+    <input class="search" placeholder="Buscar…" value="${esc(filtro)}" oninput="filtro=this.value;pintarLista()">
+    <div id="lista">${lista.map(tarjeta).join('')||'<div class="empty">Todavía no hay licencias.<br>Tocá <b>+ Nueva</b> para crear la primera.</div>'}</div>
+  </main><button class="btn fab" onclick="nueva()">+ Nueva</button>`}
+function pintarLista(){const y=scrollY;pintar();const s=document.querySelector('.search');s.focus();s.setSelectionRange(s.value.length,s.value.length);scrollTo(0,y)}
+function tarjeta(l){const[t,c]=estado(l),eqs=E.filter(e=>e.licencia_id===l.id).sort((a,b)=>(b.aprobado-a.aprobado));
+  return `<div class="card"><div class="top"><div class="n"><b>${esc(l.nombre)}</b><small>${l.contacto?esc(l.contacto)+' · ':''}vence ${fC(l.vence)} · ${l.max_equipos} compu${l.max_equipos>1?'s':''}</small></div><span class="chip ${c}">${t}</span></div>
+    <button class="cod" onclick="copiar('${l.codigo}')">${l.codigo}</button>
+    ${eqs.length?`<div class="eq">${eqs.map(e=>`<div class="eqr"><div class="t">${esc(e.nombre_pc||'Compu')} <small>Equipo ${e.equipo.slice(0,4)}-${e.equipo.slice(4,8)} · ${hace(e.ultima)} · ${e.aperturas} aperturas</small></div>
+      ${e.aprobado?`<span class="chip c-ok">Autorizada</span>`:`<button class="btn sm ok" onclick="autorizar(${l.id},'${e.equipo}')">Autorizar</button>`}
+      <button class="btn sm sec" onclick="quitarEq(${l.id},'${e.equipo}','${esc(e.nombre_pc||'')}')">✕</button></div>`).join('')}</div>`:'<div class="eq"><small style="color:var(--mut)">Todavía no la activó en ninguna compu.</small></div>'}
+    <div class="acts"><button class="btn sm" onclick="renovar(${l.id},1)">+1 mes</button><button class="btn sm sec" onclick="renovarMas(${l.id})">Renovar…</button>
+      <button class="btn sm sec" onclick="mandar(${l.id})">WhatsApp</button><button class="btn sm sec" onclick="editar(${l.id})">Editar</button></div></div>`}
+
+/* ---------- acciones ---------- */
+async function copiar(c){try{await navigator.clipboard.writeText(c);toast('Código copiado.')}catch(e){toast(c)}}
+async function upd(id,cambios,msg){const{error}=await sb.from('lic_licencias').update(cambios).eq('id',id);if(error){toast(error.message);return false}toast(msg);await cargar();return true}
+function renovar(id,m){const l=L.find(x=>x.id===id),desde=l.vence>hoyAr()?l.vence:hoyAr(),nv=sumarMeses(desde,m);
+  upd(id,{vence:nv,activo:true},l.nombre+': pago hasta el '+fC(nv)+'.')}
+function renovarMas(id){const l=L.find(x=>x.id===id);
+  abrir(`<h2>Renovar ${esc(l.nombre)}</h2><p style="color:var(--mut);margin-top:0">Hoy vence el ${fC(l.vence)}.</p>
+  <div class="acts">${[1,2,3,6,12].map(m=>`<button class="btn sec" onclick="cerrar();renovar(${id},${m})">+${m} ${m>1?'meses':'mes'}</button>`).join('')}</div>
+  <div class="f" style="margin-top:14px"><label>O elegí la fecha exacta</label><input type="date" id="rv" value="${l.vence}"></div>
+  <div class="row2"><button class="btn sec" onclick="cerrar()">Cancelar</button><button class="btn" onclick="cerrar();upd(${id},{vence:$('rv').value},'Fecha cambiada.')">Guardar fecha</button></div>`)}
+async function autorizar(lid,eq){const{error}=await sb.from('lic_equipos').update({aprobado:true}).eq('licencia_id',lid).eq('equipo',eq);if(error){toast(error.message);return}toast('Compu autorizada. Que toque "Probar de nuevo".');cargar()}
+function quitarEq(lid,eq,n){abrir(`<h2>Quitar compu</h2><p>¿Sacar <b>${esc(n||'esta compu')}</b> de la licencia? Si la vuelven a abrir, va a quedar esperando autorización.</p>
+  <div class="row2"><button class="btn sec" onclick="cerrar()">Cancelar</button><button class="btn rd" onclick="cerrar();borrarEq(${lid},'${eq}')">Quitar</button></div>`)}
+async function borrarEq(lid,eq){const{error}=await sb.from('lic_equipos').delete().eq('licencia_id',lid).eq('equipo',eq);if(error){toast(error.message);return}toast('Compu quitada.');cargar()}
+function nueva(){abrir(`<h2>Nueva licencia</h2>
+  <div class="f"><label>Nombre</label><input id="nn" placeholder="Ej.: Leysa - Fonoaudióloga"></div>
+  <div class="f"><label>WhatsApp <small>(opcional)</small></label><input id="nc" inputmode="tel" placeholder="Ej.: 351 555 1234"></div>
+  <div class="f"><label>Pago por</label><select id="nm"><option value="1">1 mes</option><option value="2">2 meses</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select></div>
+  <div class="f"><label>Compus a la vez</label><select id="ne"><option>1</option><option>2</option><option>3</option></select></div>
+  <div class="row2"><button class="btn sec" onclick="cerrar()">Cancelar</button><button class="btn" onclick="crear()">Crear</button></div>`);setTimeout(()=>$('nn').focus(),50)}
+async function crear(){const n=$('nn').value.trim();if(!n){toast('Poné un nombre.');return}
+  const row={codigo:nuevoCodigo(),nombre:n,contacto:$('nc').value.trim()||null,vence:sumarMeses(hoyAr(),+$('nm').value),max_equipos:+$('ne').value};
+  const{data,error}=await sb.from('lic_licencias').insert(row).select().single();if(error){toast(error.message);return}
+  await cargar();mostrarCodigo(data)}
+function mostrarCodigo(l){abrir(`<h2>Licencia creada</h2><p style="margin:0;color:var(--mut)">${esc(l.nombre)} · vence el ${fC(l.vence)}</p>
+  <div class="grande">${l.codigo}</div>
+  <div class="acts" style="justify-content:center"><button class="btn sec" onclick="copiar('${l.codigo}')">Copiar código</button><button class="btn" onclick="mandar(${l.id})">Mandar por WhatsApp</button></div>
+  <div class="row2"><button class="btn sec" onclick="cerrar()">Listo</button></div>`)}
+function mandar(id){const l=L.find(x=>x.id===id);
+  const t=`Hola! Este es tu código de licencia de MAS Consultorios:\n\n*${l.codigo}*\n\nAl abrir el programa te lo pide una sola vez: lo escribís y tocás "Activar". Vale hasta el ${fC(l.vence)}.`;
+  window.open('https://wa.me/'+waNum(l.contacto)+'?text='+encodeURIComponent(t),'_blank')}
+function editar(id){const l=L.find(x=>x.id===id);
+  abrir(`<h2>Editar</h2>
+  <div class="f"><label>Nombre</label><input id="en" value="${esc(l.nombre)}"></div>
+  <div class="f"><label>WhatsApp</label><input id="ec" inputmode="tel" value="${esc(l.contacto||'')}"></div>
+  <div class="f"><label>Compus a la vez</label><select id="ee">${[1,2,3,4,5].map(n=>`<option ${n===l.max_equipos?'selected':''}>${n}</option>`).join('')}</select></div>
+  <div class="f"><label>Nota</label><input id="eo" value="${esc(l.nota||'')}"></div>
+  <div class="acts"><button class="btn sm ${l.activo?'rd':'ok'}" onclick="cerrar();upd(${id},{activo:${!l.activo}},'${l.activo?'Suspendida':'Reactivada'}.')">${l.activo?'Suspender':'Reactivar'}</button>
+    <button class="btn sm rd" onclick="borrarLic(${id})">Borrar licencia</button></div>
+  <div class="row2"><button class="btn sec" onclick="cerrar()">Cancelar</button><button class="btn" onclick="cerrar();upd(${id},{nombre:$('en').value.trim()||l.nombre,contacto:$('ec').value.trim()||null,max_equipos:+$('ee').value,nota:$('eo').value.trim()||null},'Guardado.')">Guardar</button></div>`)}
+function borrarLic(id){const l=L.find(x=>x.id===id);
+  abrir(`<h2>Borrar licencia</h2><p>¿Borrar la licencia de <b>${esc(l.nombre)}</b>? El programa le va a pedir un código nuevo. No se puede deshacer (si es por falta de pago, mejor <b>Suspender</b>).</p>
+  <div class="row2"><button class="btn sec" onclick="cerrar()">Cancelar</button><button class="btn rd" onclick="cerrar();borrarLic2(${id})">Borrar</button></div>`)}
+async function borrarLic2(id){const{error}=await sb.from('lic_licencias').delete().eq('id',id);if(error){toast(error.message);return}toast('Licencia borrada.');cargar()}
+
+/* ---------- arranque ---------- */
+async function iniciar(){
+  const{data}=await sb.auth.getSession();
+  if(!data.session){pantallaLogin();return}
+  const{data:ok}=await sb.rpc('lic_es_admin');
+  if(!ok){pantallaLogin('Ese mail no tiene acceso a las licencias.');await sb.auth.signOut();return}
+  $('bSalir').hidden=false;await cargar()}
+sb.auth.onAuthStateChange((ev)=>{if(ev==='SIGNED_IN')iniciar()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&L.length)cargar()});
+iniciar();
+</script>
+</body>
+</html>
