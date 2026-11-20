@@ -72,6 +72,8 @@ const pad=n=>String(n).padStart(2,'0');
 const hoyAr=()=>{const d=new Date(Date.now()-3*3600e3);return d.toISOString().slice(0,10)};
 const fC=s=>s?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4):'—';
 const dias=s=>Math.round((Date.parse(s)-Date.parse(hoyAr()))/864e5);
+const PRUEBA='Prueba gratis';const esPrueba=l=>l.nota===PRUEBA;
+function sumarDias(iso,n){const t=new Date(iso+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)}
 function sumarMeses(iso,m){const[y,mo,d]=iso.split('-').map(Number);const t=new Date(Date.UTC(y,mo-1+m,1));const ult=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+1,0)).getUTCDate();t.setUTCDate(Math.min(d,ult));return t.toISOString().slice(0,10)}
 function hace(ts){if(!ts)return 'nunca';const m=Math.round((Date.now()-Date.parse(ts))/60000);if(m<2)return 'recién';if(m<60)return 'hace '+m+' min';const h=Math.round(m/60);if(h<24)return 'hace '+h+' h';const d=Math.round(h/24);return 'hace '+d+' día'+(d>1?'s':'')}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2600)}
@@ -126,7 +128,7 @@ function pintar(){
 function pintarLista(){const y=scrollY;pintar();const s=document.querySelector('.search');s.focus();s.setSelectionRange(s.value.length,s.value.length);scrollTo(0,y)}
 function tarjeta(l){const[t,c]=estado(l),eqs=E.filter(e=>e.licencia_id===l.id).sort((a,b)=>(b.aprobado-a.aprobado));
   const on=l.tipo==='online';
-  return `<div class="card"><div class="top"><div class="n"><b>${esc(l.nombre)} <span class="chip ${on?'c-am':'c-gr'}" style="font-size:11px">${on?'Online':'Compu'}</span></b><small>${l.contacto?esc(l.contacto)+' · ':''}vence ${fC(l.vence)}${on?'':' · '+l.max_equipos+' compu'+(l.max_equipos>1?'s':'')}</small></div><span class="chip ${c}">${t}</span></div>
+  return `<div class="card"><div class="top"><div class="n"><b>${esc(l.nombre)} <span class="chip ${on?'c-am':'c-gr'}" style="font-size:11px">${on?'Online':'Compu'}</span>${esPrueba(l)?' <span class="chip c-ok" style="font-size:11px">Prueba</span>':''}</b><small>${l.contacto?esc(l.contacto)+' · ':''}${esPrueba(l)?'prueba hasta':'vence'} ${fC(l.vence)}${on?'':' · '+l.max_equipos+' compu'+(l.max_equipos>1?'s':'')}</small></div><span class="chip ${c}">${t}</span></div>
     ${on?`<button class="cod" onclick="copiar('${esc(l.email||'')}')">${esc(l.email||'(sin mail)')}</button><div class="eq"><small style="color:var(--mut)">${l.ultimo_uso?'Último ingreso '+hace(l.ultimo_uso)+' · '+l.usos+' ingresos':'Todavía no entró.'}</small></div>`:`<button class="cod" onclick="copiar('${l.codigo}')">${l.codigo}</button>`}
     ${on?'':eqs.length?`<div class="eq">${eqs.map(e=>`<div class="eqr"><div class="t">${esc(e.nombre_pc||'Compu')} <small>Equipo ${e.equipo.slice(0,4)}-${e.equipo.slice(4,8)} · ${hace(e.ultima)} · ${e.aperturas} aperturas</small></div>
       ${e.aprobado?`<span class="chip c-ok">Autorizada</span>`:`<button class="btn sm ok" onclick="autorizar(${l.id},'${e.equipo}')">Autorizar</button>`}
@@ -138,7 +140,7 @@ function tarjeta(l){const[t,c]=estado(l),eqs=E.filter(e=>e.licencia_id===l.id).s
 async function copiar(c){try{await navigator.clipboard.writeText(c);toast('Código copiado.')}catch(e){toast(c)}}
 async function upd(id,cambios,msg){const{error}=await sb.from('lic_licencias').update(cambios).eq('id',id);if(error){toast(error.message);return false}toast(msg);await cargar();return true}
 function renovar(id,m){const l=L.find(x=>x.id===id),desde=l.vence>hoyAr()?l.vence:hoyAr(),nv=sumarMeses(desde,m);
-  upd(id,{vence:nv,activo:true},l.nombre+': pago hasta el '+fC(nv)+'.')}
+  upd(id,Object.assign({vence:nv,activo:true},esPrueba(l)?{nota:null}:{}),l.nombre+': pago hasta el '+fC(nv)+'.')}
 function renovarMas(id){const l=L.find(x=>x.id===id);
   abrir(`<h2>Renovar ${esc(l.nombre)}</h2><p style="color:var(--mut);margin-top:0">Hoy vence el ${fC(l.vence)}.</p>
   <div class="acts">${[1,2,3,6,12].map(m=>`<button class="btn sec" onclick="cerrar();renovar(${id},${m})">+${m} ${m>1?'meses':'mes'}</button>`).join('')}</div>
@@ -153,23 +155,26 @@ function nueva(){abrir(`<h2>Nueva licencia</h2>
   <div class="f"><label>Nombre</label><input id="nn" placeholder="Ej.: Leysa - Fonoaudióloga"></div>
   <div class="f" id="nmail" hidden><label>Mail de Google (Gmail) de la profesional</label><input id="ne2" type="email" inputmode="email" placeholder="ej.: leysa@gmail.com"></div>
   <div class="f"><label>WhatsApp <small>(opcional)</small></label><input id="nc" inputmode="tel" placeholder="Ej.: 351 555 1234"></div>
-  <div class="f"><label>Pago por</label><select id="nm"><option value="1">1 mes</option><option value="2">2 meses</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select></div>
+  <div class="f"><label>Pago por</label><select id="nm" onchange="$('nfx').hidden=this.value!=='f'"><option value="p10">Prueba gratis 10 días</option><option value="1" selected>1 mes</option><option value="2">2 meses</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="12">12 meses</option><option value="f">Fecha exacta…</option></select></div>
+  <div class="f" id="nfx" hidden><label>Vence el</label><input type="date" id="nfd"></div>
   <div class="f" id="neq"><label>Compus a la vez</label><select id="ne"><option>1</option><option>2</option><option>3</option></select></div>
   <div class="row2"><button class="btn sec" onclick="cerrar()">Cancelar</button><button class="btn" onclick="crear()">Crear</button></div>`);setTimeout(()=>$('nn').focus(),50)}
 async function crear(){const n=$('nn').value.trim();if(!n){toast('Poné un nombre.');return}
   const tipo=$('nt').value,email=$('ne2').value.trim().toLowerCase();
   if(tipo==='online'&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast('Poné el mail de Google de la profesional.');return}
-  const row={codigo:nuevoCodigo(),nombre:n,contacto:$('nc').value.trim()||null,vence:sumarMeses(hoyAr(),+$('nm').value),max_equipos:+$('ne').value,tipo,email:tipo==='online'?email:null};
+  const pm=$('nm').value,prueba=pm==='p10';let vence;
+  if(prueba)vence=sumarDias(hoyAr(),10);else if(pm==='f'){vence=$('nfd').value;if(!vence||vence<hoyAr()){toast('Elegí la fecha de vencimiento (de hoy en adelante).');return}}else vence=sumarMeses(hoyAr(),+pm);
+  const row={codigo:nuevoCodigo(),nombre:n,contacto:$('nc').value.trim()||null,vence,max_equipos:+$('ne').value,tipo,email:tipo==='online'?email:null,nota:prueba?PRUEBA:null};
   const{data,error}=await sb.from('lic_licencias').insert(row).select().single();if(error){toast(/lic_email_online|duplicate/i.test(error.message)?'Ese mail ya tiene una licencia online.':error.message);return}
   await cargar();mostrarCodigo(data)}
-function mostrarCodigo(l){const on=l.tipo==='online';abrir(`<h2>Licencia creada</h2><p style="margin:0;color:var(--mut)">${esc(l.nombre)} · ${on?'Online':'Compu'} · vence el ${fC(l.vence)}</p>
+function mostrarCodigo(l){const on=l.tipo==='online';abrir(`<h2>Licencia creada</h2><p style="margin:0;color:var(--mut)">${esc(l.nombre)} · ${on?'Online':'Compu'} · ${esPrueba(l)?'prueba gratis hasta':'vence'} el ${fC(l.vence)}</p>
   <div class="grande" style="${on?'font-size:18px;letter-spacing:0':''}">${on?esc(l.email):l.codigo}</div>
   <div class="acts" style="justify-content:center">${on?`<button class="btn sec" onclick="copiar(APP_URL)">Copiar link de la app</button>`:`<button class="btn sec" onclick="copiar('${l.codigo}')">Copiar código</button>`}<button class="btn" onclick="mandar(${l.id})">Mandar por WhatsApp</button></div>
   <div class="row2"><button class="btn sec" onclick="cerrar()">Listo</button></div>`)}
 function mandar(id){const l=L.find(x=>x.id===id);
   const t=l.tipo==='online'
-    ?`Hola! Ya tenés activado MAS Consultorios Online.\n\nEntrá desde la compu, la tablet o el celu en:\n${APP_URL}\n\nTocá "Continuar con Google" con tu cuenta *${l.email}*. Tus pacientes se guardan en tu propio Google Drive. Vale hasta el ${fC(l.vence)}.`
-    :`Hola! Este es tu código de licencia de MAS Consultorios:\n\n*${l.codigo}*\n\nAl abrir el programa te lo pide una sola vez: lo escribís y tocás "Activar". Vale hasta el ${fC(l.vence)}.`;
+    ?`Hola! Ya tenés activado MAS Consultorios Online.\n\nEntrá desde la compu, la tablet o el celu en:\n${APP_URL}\n\nTocá "Continuar con Google" con tu cuenta *${l.email}*. Tus pacientes se guardan en tu propio Google Drive. ${esPrueba(l)?'La prueba gratis es hasta el '+fC(l.vence)+'.':'Vale hasta el '+fC(l.vence)+'.'}`
+    :`Hola! Este es tu código de licencia de MAS Consultorios:\n\n*${l.codigo}*\n\nAl abrir el programa te lo pide una sola vez: lo escribís y tocás "Activar". ${esPrueba(l)?'La prueba gratis es hasta el '+fC(l.vence)+'.':'Vale hasta el '+fC(l.vence)+'.'}`;
   window.open('https://wa.me/'+waNum(l.contacto)+'?text='+encodeURIComponent(t),'_blank')}
 function editar(id){const l=L.find(x=>x.id===id);
   abrir(`<h2>Editar</h2>
